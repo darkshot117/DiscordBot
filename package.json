@@ -1,0 +1,23 @@
+{
+  "name": "discord-bot",
+  "version": "1.0.0",
+  "description": "Discord Bot",
+  "main": "bot.js",
+  "scripts": {
+    "test": "node bot.js"
+  },
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/darkshot117/DiscordBot.git"
+  },
+  "author": "Xeno",
+  "license": "ISC",
+  "bugs": {
+    "url": "https://github.com/darkshot117/DiscordBot/issues"
+  },
+  "homepage": "https://github.com/darkshot117/DiscordBot#readme",
+  "dependencies": {
+    "discordie": "^0.8.1"
+  },
+  "devDependencies": {}
+}
