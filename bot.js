@@ -112,6 +112,38 @@ var commands={
       });
     }
   },
+  "servers": {
+      description: "lists servers bot is connected to",
+      process: function(bot,msg){
+        var servers = "";
+        try{
+          for (var i = 0; i < client.Guilds.toArray().length; i++){
+            servers += client.Guilds.toArray()[i].name + ', ';
+          }
+          servers = servers.substring(0,servers.length-2);
+          console.log("channels: " + servers);
+          msg.channel.sendMessage(servers);
+        } catch (err){
+          console.log(err);
+        }
+      }
+  },
+  "channels": {
+      description: "lists channels bot is connected to",
+      process: function(bot,msg){
+        var channels = "";
+        try{
+          for (var i = 0; i < client.Channels.toArray().length; i++){
+            channels += client.Channels.toArray()[i].name + ', ';
+          }
+          channels = channels.substring(0,channels.length-2);
+          console.log("channels: " + channels);
+          msg.channel.sendMessage(channels);
+        } catch (err){
+          console.log(err);
+        }
+      }
+  },
   "ping": {
       description: "responds pong, useful for checking if bot is alive",
       process: function(bot, msg, suffix) {
@@ -291,6 +323,26 @@ client.Dispatcher.on(Events.MESSAGE_CREATE, e=>{
   }
 });
 
+//Log user status changes
+client.Dispatcher.on(Events.PRESENCE_UPDATE, e=>{
+	//if(status === "online"){
+	//console.log("presence update");
+	console.log(e.user + " went " + e.user.status);
+	//}
+	try{
+	if(e.user.status != 'offline'){
+		if(messagebox.hasOwnProperty(e.user.id)){
+			console.log("found message for " + e.user.id);
+			var message = messagebox[e.user.id];
+			var channel = client.Channels.get("id",message.channel);
+			delete messagebox[e.user.id];
+			updateMessagebox();
+			channel.sendMessage(message.content);
+		}
+	}
+	}catch(e){}
+});
+
 function get_gif(tags, func) {
     //limit=1 will only return 1 gif
     var params = {
@@ -325,6 +377,18 @@ function get_gif(tags, func) {
             }
         }
     }.bind(this));
+}
+
+exports.addCommand = function(commandName, commandObject){
+  try{
+    commands[commandName] = commandObject;
+  } catch(err){
+    console.log(err);
+  }
+}
+
+exports.commandCount = function(){
+  return Object.keys(commands).length;
 }
 
 console.log('Node is working!');
