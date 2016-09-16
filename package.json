@@ -17,6 +17,7 @@
   },
   "homepage": "https://github.com/darkshot117/DiscordBot#readme",
   "dependencies": {
+    "discord.js": "^9.2.0",
     "discordie": "^0.8.1"
   },
   "devDependencies": {}
