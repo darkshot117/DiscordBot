@@ -17,8 +17,12 @@
   },
   "homepage": "https://github.com/darkshot117/DiscordBot#readme",
   "dependencies": {
-    "discord.js": "^9.2.0",
-    "discordie": "^0.8.1"
+    "d20": "^1.4.0",
+    "discordie": "^0.8.1",
+    "html-to-text": "^2.1.3",
+    "winston": "^2.2.0",
+    "wolfram": "^0.3.2",
+    "youtube-node": "^1.3.0"
   },
   "devDependencies": {}
 }
