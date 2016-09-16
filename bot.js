@@ -1,6 +1,28 @@
-var Discordie = require('discordie');
+try{
+  //var Discordie = require('discordie');
+  var Discord = require('discord.js');
+} catch (e){
+  console.log(e.stack);
+  console.log(process.version);
+  console.log("Please run npm install and ensure it passes with no errors!");
+  process.exit();
+}
 
-const Events = Discordie.Events;
+try{
+  var yt = require("./youtube_plugin");
+  var youtube_plugin = new yt();
+}catch(e){
+  console.log("couldn't load youtube plugin!\n"+e.stack);
+}
+
+try {
+	var wa = require("./wolfram_plugin");
+	var wolfram_plugin = new wa();
+} catch(e){
+	console.log("couldn't load wolfram plugin!\n"+e.stack);
+}
+
+/*const Events = Discordie.Events;
 const client = new Discordie();
 
 client.connect({
@@ -17,4 +39,4 @@ client.Dispatcher.on(Events.MESSAGE_CREATE, e=>{
   }
 });
 
-console.log('Node is installed!');
+console.log('Node is installed!');*/
