@@ -112,6 +112,15 @@ var commands={
       });
     }
   },
+  "ping": {
+      description: "responds pong, useful for checking if bot is alive",
+      process: function(bot, msg, suffix) {
+          msg.channel.sendMessage(msg.author.mention+" pong!");
+          if(suffix){
+              msg.channel.sendMessage(msg.author.mention+ " note that .ping takes no arguments!");
+          }
+      }
+  },
   "servers": {
       description: "lists servers bot is connected to",
       process: function(bot,msg){
@@ -165,14 +174,309 @@ var commands={
       description: "bot says message with text to speech",
       process: function(bot,msg,suffix){ msg.channel.sendMessage(suffix,{tts:true});}
   },
-  "ping": {
-      description: "responds pong, useful for checking if bot is alive",
-      process: function(bot, msg, suffix) {
-          msg.channel.sendMessage(msg.author.mention+" pong!");
-          if(suffix){
-              msg.channel.sendMessage(msg.author.mention+ " note that .ping takes no arguments!");
-          }
+  "meme": {
+      usage: 'meme "top text" "bottom text"',
+      process: function(bot,msg,suffix) {
+          var tags = msg.content.split('"');
+          var memetype = tags[0].split(" ")[1];
+          //bot.sendMessage(msg.channel,tags);
+          var Imgflipper = require("imgflipper");
+          var imgflipper = new Imgflipper(AuthDetails.imgflip_username, AuthDetails.imgflip_password);
+          imgflipper.generateMeme(meme[memetype], tags[1]?tags[1]:"", tags[3]?tags[3]:"", function(err, image){
+              //console.log(arguments);
+              msg.channel.sendMessage(image);
+          });
       }
+  },
+  "memehelp": { //TODO: this should be handled by !help
+      description: "returns available memes for !meme",
+      process: function(bot,msg) {
+          var str = "Currently available memes:\n"
+          for (var m in meme){
+              str += m + "\n"
+          }
+          msg.channel.sendMessage(str);
+      }
+  },
+  "version": {
+    description: "returns the git commit this bot is running",
+    process: function(bot,msg,suffix) {
+      try{
+        var commit = require('child_process').spawn('git', ['log','-n','1']);
+        commit.stdout.on('data', function(data) {
+          msg.channel.sendMessage(data);
+        });
+        commit.on('close', function(code) {
+          if( code != 0){
+            msg.channel.sendMessage("failed checking git version!");
+          }
+        });
+      }catch(err){
+        console.log(err);
+      }
+    }
+  },
+  "log": {
+      usage: "<log message>",
+      description: "logs message to bot console",
+      process: function(bot,msg,suffix){console.log(msg.content);}
+  },
+  "wiki": {
+      usage: "<search terms>",
+      description: "returns the summary of the first matching search result from Wikipedia",
+      process: function(bot,msg,suffix) {
+          var query = suffix;
+          if(!query) {
+              msg.channel.sendMessage("usage: !wiki search terms");
+              return;
+          }
+          var Wiki = require('wikijs');
+          new Wiki().search(query,1).then(function(data) {
+              new Wiki().page(data.results[0]).then(function(page) {
+                  page.summary().then(function(summary) {
+                      var sumText = summary.toString().split('\n');
+                      var continuation = function() {
+                          var paragraph = sumText.shift();
+                          if(paragraph){
+                              msg.channel.sendMessage(paragraph,continuation);
+                          }
+                      };
+                      continuation();
+                  });
+              });
+          },function(err){
+              msg.channel.sendMessage(err);
+          });
+      }
+  },
+  "stock": {
+      usage: "<stock to fetch>",
+      process: function(bot,msg,suffix) {
+          var yahooFinance = require('yahoo-finance');
+          yahooFinance.snapshot({
+            symbol: suffix,
+            fields: ['s', 'n', 'd1', 'l1', 'y', 'r'],
+          }, function (error, snapshot) {
+              if(error){
+                  msg.channel.sendMessage("couldn't get stock: " + error);
+              } else {
+                  //msg.channel.sendMessage(JSON.stringify(snapshot));
+                  msg.channel.sendMessage(snapshot.name
+                      + "\nprice: $" + snapshot.lastTradePriceOnly);
+              }
+          });
+      }
+  },
+  "wolfram": {
+    usage: "<search terms>",
+    description: "gives results from wolframalpha using search terms",
+    process: function(bot,msg,suffix){
+      if(!suffix){
+        msg.channel.sendMessage("Usage: !wolfram <search terms> (Ex. !wolfram integrate 4x)");
+      }
+      wolfram_plugin.respond(suffix,msg.channel,bot);
+    }
+  },
+  "rss": {
+      description: "lists available rss feeds",
+      process: function(bot,msg,suffix) {
+          /*var args = suffix.split(" ");
+          var count = args.shift();
+          var url = args.join(" ");
+          rssfeed(bot,msg,url,count,full);*/
+          msg.channel.sendMessage("Available feeds:", function(){
+              for(var c in rssFeeds){
+                  msg.channel.sendMessage(c + ": " + rssFeeds[c].url);
+              }
+          });
+      }
+  },
+  "reddit": {
+      usage: "[subreddit]",
+      description: "Returns the top post on reddit. Can optionally pass a subreddit to get the top post there instead",
+      process: function(bot,msg,suffix) {
+          var path = "/.rss"
+          if(suffix){
+              path = "/r/"+suffix+path;
+          }
+          rssfeed(bot,msg,"https://www.reddit.com"+path,1,false);
+      }
+  },
+  "alias": {
+    usage: "<name> <actual command>",
+    description: "Creates command aliases. Useful for making simple commands on the fly",
+    process: function(bot,msg,suffix) {
+      var args = suffix.split(" ");
+      var name = args.shift();
+      if(!name){
+        msg.channel.sendMessage("!alias " + this.usage + "\n" + this.description);
+      } else if(commands[name] || name === "help"){
+        msg.channel.sendMessage("overwriting commands with aliases is not allowed!");
+      } else {
+        var command = args.shift();
+        aliases[name] = [command, args.join(" ")];
+        //now save the new alias
+        require("fs").writeFile("./alias.json",JSON.stringify(aliases,null,2), null);
+        msg.channel.sendMessage("created alias " + name);
+      }
+    }
+  },
+  "userid": {
+    usage: "[user to get id of]",
+    description: "Returns the unique id of a user. This is useful for permissions.",
+    process: function(bot,msg,suffix) {
+      if(suffix){
+        var users = msg.channel.server.members.getAll("username",suffix);
+        if(users.length == 1){
+          msg.channel.sendMessage("The id of " + users[0] + " is " + users[0].id)
+        } else if(users.length > 1){
+          var response = "multiple users found:";
+          for(var i=0;i<users.length;i++){
+            var user = users[i];
+            response += "\nThe id of " + user + " is " + user.id;
+          }
+          msg.channel.sendMessage(response);
+        } else {
+          msg.channel.sendMessage("No user " + suffix + " found!");
+        }
+      } else {
+        msg.channel.sendMessage("The id of " + msg.author + " is " + msg.author.id);
+      }
+    }
+  },
+  "eval": {
+    usage: "<command>",
+    description: 'Executes arbitrary javascript in the bot process. User must have "eval" permission',
+    process: function(bot,msg,suffix) {
+      if(Permissions.checkPermission(msg.author,"eval")){
+        msg.channel.sendMessage(eval(suffix,bot));
+      } else {
+        msg.channel.sendMessage(msg.author + " doesn't have permission to execute eval!");
+      }
+    }
+  },
+  "topic": {
+    usage: "[topic]",
+    description: 'Sets the topic for the channel. No topic removes the topic.',
+    process: function(bot,msg,suffix) {
+      msg.channel.setChannelTopic(suffix);
+    }
+  },
+  "roll": {
+    usage: "[# of sides] or [# of dice]d[# of sides]( + [# of dice]d[# of sides] + ...)",
+    description: "roll one die with x sides, or multiple dice using d20 syntax. Default value is 10",
+    process: function(bot,msg,suffix) {
+      if (suffix.split("d").length <= 1) {
+          msg.channel.sendMessage(msg.author + " rolled a " + d20.roll(suffix || "10"));
+      }
+      else if (suffix.split("d").length > 1) {
+        var eachDie = suffix.split("+");
+        var passing = 0;
+        for (var i = 0; i < eachDie.length; i++){
+          if (eachDie[i].split("d")[0] < 50) {
+              passing += 1;
+          };
+        }
+        if (passing == eachDie.length) {
+          msg.channel.sendMessage(msg.author.mention + " rolled a " + d20.roll(suffix));
+        }  else {
+          msg.channel.sendMessage(msg.author.mention + " tried to roll too many dice at once!");
+        }
+      }
+    }
+  },
+  "msg": {
+    usage: "<user> <message to leave user>",
+    description: "leaves a message for a user the next time they come online",
+    process: function(bot,msg,suffix) {
+      var args = suffix.split(' ');
+      var user = args.shift();
+      var message = args.join(' ');
+      if(user.startsWith('<@')){
+        user = user.substr(2,user.length-3);
+      }
+      var target = msg.channel.server.members.get("id",user);
+      if(!target){
+        target = msg.channel.server.members.get("username",user);
+      }
+      messagebox[target.id] = {
+        channel: msg.channel.id,
+        content: target + ", " + msg.author + " said: " + message
+      };
+      updateMessagebox();
+      msg.channel.sendMessage("message saved.")
+    }
+  },
+  "beam": {
+      usage: "<stream>",
+      description: "checks if the given Beam stream is online",
+      process: function(bot,msg,suffix){
+          require("request")("https://beam.pro/api/v1/channels/"+suffix,
+          function(err,res,body){
+              var data = JSON.parse(body);
+              if(data.user){
+                  msg.channel.sendMessage(suffix
+                      +" is online, playing "
+                      +"\n"+data.type.name
+                      +"\n"+data.online
+                      +"\n"+data.thumbnail.url)
+              }else{
+                  msg.channel.sendMessage(suffix+" is offline")
+              }
+          });
+      }
+  },
+  "twitch": {
+    usage: "<stream>",
+    description: "checks if the given stream is online",
+    process: function(bot,msg,suffix){
+      try{
+        require("request")("https://api.twitch.tv/kraken/streams/"+suffix,
+        function(err,res,body){
+          var stream = JSON.parse(body);
+          if(stream.stream){
+            msg.channel.sendMessage(suffix
+              +" is online, playing "
+              +stream.stream.game
+              +"\n"+stream.stream.channel.status
+              +"\n"+stream.stream.preview.large)
+          }else{
+            msg.channel.sendMessage(suffix+" is offline")
+          }
+        });
+      }catch(err){
+        console.log(err);
+      }
+    }
+  },
+  "xkcd": {
+    usage: "[comic number]",
+    description: "displays a given xkcd comic number (or the latest if nothing specified",
+    process: function(bot,msg,suffix){
+      var url = "http://xkcd.com/";
+      if(suffix != "") url += suffix+"/";
+      url += "info.0.json";
+      require("request")(url,function(err,res,body){
+        try{
+          var comic = JSON.parse(body);
+          msg.channel.sendMessage(comic.title+"\n"+comic.img,function(){
+              msg.channel.sendMessage(comic.alt)
+          });
+        }catch(e){
+          msg.channel.sendMessage("Couldn't fetch an XKCD for "+suffix);
+        }
+      });
+    }
+  },
+  "watchtogether": {
+    usage: "[video url (Youtube, Vimeo)",
+    description: "Generate a watch2gether room with your video to watch with your little friends!",
+    process: function(bot,msg,suffix){
+      var watch2getherUrl = "https://www.watch2gether.com/go#";
+      msg.channel.sendMessage("watch2gether link",function(){
+        msg.channel.sendMessage(watch2getherUrl + suffix)
+      })
+    }
   },
   "lenny":{
     process: function(bot, msg, suffix) {
@@ -182,6 +486,36 @@ var commands={
   "no":{
     process: function(bot, msg, suffix) {
         msg.channel.sendMessage("ಠ_ಠ");
+    }
+  },
+  "uptime": {
+    usage: "",
+    description: "returns the amount of time since the bot started",
+    process: function(bot,msg,suffix){
+      var now = Date.now();
+      var msec = now - startTime;
+      console.log("Uptime is " + msec + " milliseconds");
+      var days = Math.floor(msec / 1000 / 60 / 60 / 24);
+      msec -= days * 1000 * 60 * 60 * 24;
+      var hours = Math.floor(msec / 1000 / 60 / 60);
+      msec -= hours * 1000 * 60 * 60;
+      var mins = Math.floor(msec / 1000 / 60);
+      msec -= mins * 1000 * 60;
+      var secs = Math.floor(msec / 1000);
+      var timestr = "";
+      if(days > 0) {
+        timestr += days + " days ";
+      }
+      if(hours > 0) {
+        timestr += hours + " hours ";
+      }
+      if(mins > 0) {
+        timestr += mins + " minutes ";
+      }
+      if(secs > 0) {
+        timestr += secs + " seconds ";
+      }
+      msg.channel.sendMessage("Uptime: " + timestr);
     }
   }
 }
