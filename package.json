@@ -24,6 +24,7 @@
     "google-images": "^1.0.0",
     "html-to-text": "^2.1.3",
     "imgflipper": "^1.0.1",
+    "npm": "^3.10.7",
     "wikijs": "^1.1.0",
     "winston": "^2.2.0",
     "wolfram": "^0.3.2",

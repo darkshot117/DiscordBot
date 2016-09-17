@@ -94,6 +94,7 @@ var meme = {
 };
 
 var aliases;
+var autoresponses;
 var messagebox;
 
 var commands={
@@ -278,28 +279,44 @@ var commands={
     }
   },
   "rss": {
-      description: "lists available rss feeds",
-      process: function(bot,msg,suffix) {
-          /*var args = suffix.split(" ");
-          var count = args.shift();
-          var url = args.join(" ");
-          rssfeed(bot,msg,url,count,full);*/
-          msg.channel.sendMessage("Available feeds:", function(){
-              for(var c in rssFeeds){
-                  msg.channel.sendMessage(c + ": " + rssFeeds[c].url);
-              }
-          });
+    description: "lists available rss feeds",
+    process: function(bot,msg,suffix) {
+      /*var args = suffix.split(" ");
+      var count = args.shift();
+      var url = args.join(" ");
+      rssfeed(bot,msg,url,count,full);*/
+      try{
+        var message = "Available feeds: \n";
+        for(var c in rssFeeds){
+          message += c + ": " + rssFeeds[c].url + "\n";
+        }
       }
+      catch(err){
+        console.log(err);
+      }
+      msg.channel.sendMessage(message);
+    }
   },
   "reddit": {
       usage: "[subreddit]",
       description: "Returns the top post on reddit. Can optionally pass a subreddit to get the top post there instead",
       process: function(bot,msg,suffix) {
-          var path = "/.rss"
-          if(suffix){
-              path = "/r/"+suffix+path;
-          }
-          rssfeed(bot,msg,"https://www.reddit.com"+path,1,false);
+        var args = suffix.split(" ");
+        var count = 1;
+        var subreddit;
+        var path = "/.rss";
+
+        if (args.length > 0){
+          subreddit = args.shift();
+          if (args.length > 0)
+            count = args.shift();
+        }
+        if(subreddit)
+            path = "/r/"+subreddit+path;
+        if (count > 5)
+          count = 5;
+
+        rssfeed(bot,msg,"https://www.reddit.com"+path,count,false);
       }
   },
   "alias": {
@@ -309,8 +326,8 @@ var commands={
       var args = suffix.split(" ");
       var name = args.shift();
       if(!name){
-        msg.channel.sendMessage("!alias " + this.usage + "\n" + this.description);
-      } else if(commands[name] || name === "help"){
+        msg.channel.sendMessage(".alias " + this.usage + "\n" + this.description);
+      } else if(commands[name] || autoresponses[name] || name === "help"){
         msg.channel.sendMessage("overwriting commands with aliases is not allowed!");
       } else {
         var command = args.shift();
@@ -318,6 +335,26 @@ var commands={
         //now save the new alias
         require("fs").writeFile("./alias.json",JSON.stringify(aliases,null,2), null);
         msg.channel.sendMessage("created alias " + name);
+      }
+    }
+  },
+  "autoresponse": {
+    usage: "<name> <response>",
+    description: "Creates an auto response command. Useful for making simple responses on the fly",
+    process: function(bot,msg,suffix) {
+      var args = suffix.trim().split(" ");
+      var command = args.shift();
+
+      if(!command){
+        msg.channel.sendMessage(".autoresponse " + this.usage + "\n" + this.description);
+      } else if(commands[command] || aliases[command] || command === "help"){
+        msg.channel.sendMessage("overwriting commands with auto responses is not allowed!");
+      } else {
+        var response = args.join(" ");
+        autoresponses[command] = [response];//, args.join(" ")];
+        //now save the new auto response
+        require("fs").writeFile("./autoresponse.json",JSON.stringify(autoresponses,null,2), null);
+        msg.channel.sendMessage("created auto response " + command + ": " + response);
       }
     }
   },
@@ -478,16 +515,6 @@ var commands={
       })
     }
   },
-  "lenny":{
-    process: function(bot, msg, suffix) {
-        msg.channel.sendMessage("( ͡° ͜ʖ ͡°)");
-    }
-  },
-  "no":{
-    process: function(bot, msg, suffix) {
-        msg.channel.sendMessage("ಠ_ಠ");
-    }
-  },
   "uptime": {
     usage: "",
     description: "returns the amount of time since the bot started",
@@ -521,23 +548,31 @@ var commands={
 }
 
 try{
-var rssFeeds = require("./rss.json");
-function loadFeeds(){
+  var rssFeeds = require("./rss.json");
+  function loadFeeds(){
     for(var cmd in rssFeeds){
-        commands[cmd] = {
-            usage: "[count]",
-            description: rssFeeds[cmd].description,
-            url: rssFeeds[cmd].url,
-            process: function(bot,msg,suffix){
-                var count = 1;
-                if(suffix != null && suffix != "" && !isNaN(suffix)){
-                    count = suffix;
-                }
-                rssfeed(bot,msg,this.url,count,false);
+      commands[cmd] = {
+        usage: "[count]",
+        description: rssFeeds[cmd].description,
+        url: rssFeeds[cmd].url,
+        process: function(bot,msg,suffix){
+          try{
+            var count = 1;
+            if(suffix != null && suffix != "" && !isNaN(suffix)){
+              count = suffix;
             }
-        };
+            if (count > 5)
+              count = 5;
+
+            rssfeed(bot,msg,this.url,count,false);
+          }
+          catch(err){
+            console.log(err);
+          }
+        }
+      };
     }
-}
+  }
 } catch(e) {
     console.log("Couldn't load rss.json. See rss.json.example if you want rss feed commands. error: " + e);
 }
@@ -547,6 +582,12 @@ try{
 } catch(e) {
 	//No aliases defined
 	aliases = {};
+}
+
+try{
+  autoresponses = require("./autoresponse.json");
+} catch(e) {
+  autoresponses = {};
 }
 
 try{
@@ -565,7 +606,7 @@ function rssfeed(bot,msg,url,count,full){
     var request = require('request');
     request(url).pipe(feedparser);
     feedparser.on('error', function(error){
-        bot.sendMessage(msg.channel,"failed reading feed: " + error);
+        msg.channel.sendMessage("failed reading feed: " + error);
     });
     var shown = 0;
     feedparser.on('readable',function() {
@@ -575,13 +616,13 @@ function rssfeed(bot,msg,url,count,full){
             return;
         }
         var item = stream.read();
-        bot.sendMessage(msg.channel,item.title + " - " + item.link, function() {
+        msg.channel.sendMessage(item.title + " - " + item.link, function() {
             if(full === true){
                 var text = htmlToText.fromString(item.description,{
                     wordwrap:false,
                     ignoreHref:true
                 });
-                bot.sendMessage(msg.channel,text);
+                msg.channel.sendMessage(text);
             }
         });
         stream.alreadyRead = true;
@@ -592,14 +633,14 @@ const Events = Discordie.Events;
 const client = new Discordie();
 
 client.connect({
-  token: 'MjI2MTY1Mzk3NDQ2MDY2MTc4.Crzogw.esctG7eWnD1jLXqWu6LfzWqFn1k'
+  token: AuthDetails.discord_bot_key
 })
 
 client.Dispatcher.on(Events.GATEWAY_READY, e=>{
-  //loadFeeds();
+  loadFeeds();
   console.log('Connected as: ' + client.User.username);
   console.log("Ready to begin! Serving in " + client.Channels.length + " channels");
-	//require("./plugins.js").init();
+	require("./plugins.js").init();
 });
 
 client.Dispatcher.on(Events.GATEWAY_RESUMED, e=>{
@@ -627,6 +668,14 @@ client.Dispatcher.on(Events.MESSAGE_CREATE, e=>{
         return;
       }
     }
+
+    autoresponse = autoresponses[cmdTxt]
+    if (autoresponse){
+      console.log(cmdTxt + " is an auto response, replying with " + autoresponse[0]);
+      e.message.channel.sendMessage(autoresponse[0]);
+      return;
+    }
+
     alias = aliases[cmdTxt];
     if (alias){
 			console.log(cmdTxt + " is an alias, constructed command is " + alias.join(" ") + " " + suffix);
@@ -637,7 +686,6 @@ client.Dispatcher.on(Events.MESSAGE_CREATE, e=>{
 
     if (cmdTxt === "help"){
       //help is special since it iterates over the other commands
-
       e.message.channel.sendMessage(e.message.author, "Available Commands:", function(){
 				for(var cmd in commands) {
 					var info = "!" + cmd;
