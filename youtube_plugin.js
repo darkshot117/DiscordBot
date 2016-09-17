@@ -15,18 +15,23 @@ function YoutubePlugin () {
 
 YoutubePlugin.prototype.respond = function (query, channel, bot) {
 	this.youtube.search(query, 1, function(error, result) {
+		try{
 			if (error) {
 				//winston.error("Error querying youtube: " + error);
-				bot.sendMessage(channel, "¯\\_(ツ)_/¯");
+				channel.sendMessage("¯\\_(ツ)_/¯");
 			}
 			else {
 				if (!result || !result.items || result.items.length < 1) {
 					//winston.error("No results from youtube");
-					bot.sendMessage(channel, "¯\\_(ツ)_/¯");
+					channel.sendMessage("¯\\_(ツ)_/¯");
 				} else {
-					bot.sendMessage(channel, "http://www.youtube.com/watch?v=" + result.items[0].id.videoId );
+					channel.sendMessage("http://www.youtube.com/watch?v=" + result.items[0].id.videoId );
 				}
 			}
+		}
+		catch(err){
+			console.log(err);
+		}
 		});
 
 };

@@ -144,6 +144,27 @@ var commands={
         }
       }
   },
+  "myid": {
+      description: "returns the user id of the sender",
+      process: function(bot,msg){msg.channel.sendMessage(msg.author.id);}
+  },
+  "youtube": {
+      usage: "<video tags>",
+      description: "gets youtube video matching tags",
+      process: function(bot,msg,suffix){
+          youtube_plugin.respond(suffix,msg.channel,bot);
+      }
+  },
+  "say": {
+      usage: "<message>",
+      description: "bot says message",
+      process: function(bot,msg,suffix){ msg.channel.sendMessage(suffix);}
+  },
+  "announce": {
+      usage: "<message>",
+      description: "bot says message with text to speech",
+      process: function(bot,msg,suffix){ msg.channel.sendMessage(suffix,{tts:true});}
+  },
   "ping": {
       description: "responds pong, useful for checking if bot is alive",
       process: function(bot, msg, suffix) {
