@@ -178,15 +178,21 @@ var commands={
   "meme": {
       usage: 'meme "top text" "bottom text"',
       process: function(bot,msg,suffix) {
+        try{
           var tags = msg.content.split('"');
+          console.log(tags);
           var memetype = tags[0].split(" ")[1];
+          console.log(memetype);
           //bot.sendMessage(msg.channel,tags);
           var Imgflipper = require("imgflipper");
           var imgflipper = new Imgflipper(AuthDetails.imgflip_username, AuthDetails.imgflip_password);
           imgflipper.generateMeme(meme[memetype], tags[1]?tags[1]:"", tags[3]?tags[3]:"", function(err, image){
-              //console.log(arguments);
-              msg.channel.sendMessage(image);
+            console.log(image);
+            msg.channel.sendMessage(image);
           });
+        } catch (err){
+          console.log(err);
+        }
       }
   },
   "memehelp": { //TODO: this should be handled by !help
@@ -323,7 +329,7 @@ var commands={
     usage: "<name> <actual command>",
     description: "Creates command aliases. Useful for making simple commands on the fly",
     process: function(bot,msg,suffix) {
-      var args = suffix.split(" ");
+      var args = suffix.trim().split(" ");
       var name = args.shift();
       if(!name){
         msg.channel.sendMessage(".alias " + this.usage + "\n" + this.description);
@@ -332,19 +338,35 @@ var commands={
       } else {
         var command = args.shift();
         aliases[name] = [command, args.join(" ")];
-        //now save the new alias
+        //now save the new alias file
         require("fs").writeFile("./alias.json",JSON.stringify(aliases,null,2), null);
-        msg.channel.sendMessage("created alias " + name);
+        msg.channel.sendMessage("created alias " + name + " for command: " + command);
+      }
+    }
+  },
+  "removealias": {
+    usage: "<name>",
+    description: "Creates command aliases. Useful for making simple commands on the fly",
+    process: function(bot,msg,suffix) {
+      var name = suffix.trim();
+      if(!name){
+        msg.channel.sendMessage(".alias " + this.usage + "\n" + this.description);
+      } else if(commands[name] || autoresponses[name] || name === "help"){
+        msg.channel.sendMessage("overwriting commands with aliases is not allowed!");
+      } else {
+        delete aliases[name];
+        //now save the new alias file
+        require("fs").writeFile("./alias.json",JSON.stringify(aliases,null,2), null);
+        msg.channel.sendMessage("removed alias " + name);
       }
     }
   },
   "autoresponse": {
-    usage: "<name> <response>",
+    usage: "<command> <response>",
     description: "Creates an auto response command. Useful for making simple responses on the fly",
     process: function(bot,msg,suffix) {
       var args = suffix.trim().split(" ");
       var command = args.shift();
-
       if(!command){
         msg.channel.sendMessage(".autoresponse " + this.usage + "\n" + this.description);
       } else if(commands[command] || aliases[command] || command === "help"){
@@ -352,9 +374,30 @@ var commands={
       } else {
         var response = args.join(" ");
         autoresponses[command] = [response];//, args.join(" ")];
-        //now save the new auto response
+        //now save the new autoresponse file
         require("fs").writeFile("./autoresponse.json",JSON.stringify(autoresponses,null,2), null);
         msg.channel.sendMessage("created auto response " + command + ": " + response);
+      }
+    }
+  },
+  "removeautoresponse": {
+    usage: "<name>",
+    description: "Removes an auto response command.",
+    process: function(bot,msg,suffix) {
+      try{
+        var command = suffix.trim();
+        if(!command){
+          msg.channel.sendMessage(".removeautoresponse " + this.usage + "\n" + this.description);
+        } else if(commands[command] || aliases[command] || command === "help"){
+          msg.channel.sendMessage("overwriting commands with auto responses is not allowed!");
+        } else {
+          delete autoresponses[command];
+          //now save the new autoresponse file
+          require("fs").writeFile("./autoresponse.json",JSON.stringify(autoresponses,null,2), null);
+          msg.channel.sendMessage("removed auto response " + command);
+        }
+      } catch (err) {
+        console.log(err);
       }
     }
   },
@@ -654,8 +697,6 @@ client.Dispatcher.on(Events.GATEWAY_RESUMED, e=>{
 client.Dispatcher.on(Events.MESSAGE_CREATE, e=>{
 	//check if message is a command
   if (e.message.author.id != client.User.id && (e.message.content[0] === '.' || e.message.content.indexOf(client.User.mention) == 0)){
-    console.log("treating" + e.message.content + " from " + e.message.author + " as command");
-
     var cmdTxt = e.message.content.split(" ")[0].substring(1);
     var suffix = e.message.content.substring(cmdTxt.length+2); //one for the . and one for the space
 
@@ -703,7 +744,7 @@ client.Dispatcher.on(Events.MESSAGE_CREATE, e=>{
     }
     else if (cmd){
       try{
-        console.log("Processing command: " + cmd.description);
+        console.log("Processing command: " + cmdTxt);
         cmd.process(client,e.message,suffix);
       } catch(e){
         if (Config.debug){
@@ -793,5 +834,3 @@ exports.addCommand = function(commandName, commandObject){
 exports.commandCount = function(){
   return Object.keys(commands).length;
 }
-
-console.log('Node is working!');
