@@ -1,0 +1,36 @@
+{
+  "name": "discord-bot",
+  "version": "1.0.0",
+  "description": "Discord Bot",
+  "main": "bot.js",
+  "scripts": {
+    "test": "node bot.js"
+  },
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/darkshot117/DiscordBot.git"
+  },
+  "author": "Xeno",
+  "license": "ISC",
+  "bugs": {
+    "url": "https://github.com/darkshot117/DiscordBot/issues"
+  },
+  "homepage": "https://github.com/darkshot117/DiscordBot#readme",
+  "dependencies": {
+    "d20": "^1.4.0",
+    "discordie": "^0.8.1",
+    "feedparser": "^1.1.4",
+    "google": "^2.1.0",
+    "google-images": "^1.0.0",
+    "html-to-text": "^2.1.3",
+    "imgflipper": "^1.0.1",
+    "npm": "^3.10.7",
+    "request": "^2.75.0",
+    "wikijs": "^1.1.0",
+    "winston": "^2.2.0",
+    "wolfram": "^0.3.2",
+    "yahoo-finance": "^0.2.14",
+    "youtube-node": "^1.3.0"
+  },
+  "devDependencies": {}
+}
