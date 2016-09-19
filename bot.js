@@ -352,7 +352,7 @@ var commands={
       if(!name){
         msg.channel.sendMessage(".alias " + this.usage + "\n" + this.description);
       } else if(commands[name] || autoresponses[name] || name === "help"){
-        msg.channel.sendMessage("overwriting commands with aliases is not allowed!");
+        msg.channel.sendMessage("this command is not an alias");
       } else {
         delete aliases[name];
         //now save the new alias file
@@ -389,7 +389,7 @@ var commands={
         if(!command){
           msg.channel.sendMessage(".removeautoresponse " + this.usage + "\n" + this.description);
         } else if(commands[command] || aliases[command] || command === "help"){
-          msg.channel.sendMessage("overwriting commands with auto responses is not allowed!");
+          msg.channel.sendMessage("this command is not an auto response!");
         } else {
           delete autoresponses[command];
           //now save the new autoresponse file
@@ -771,7 +771,7 @@ client.Dispatcher.on(Events.MESSAGE_CREATE, e=>{
 client.Dispatcher.on(Events.PRESENCE_UPDATE, e=>{
 	//if(status === "online"){
 	//console.log("presence update");
-	console.log(e.user + " went " + e.user.status);
+	console.log(e.user.username + " went " + e.user.status);
 	//}
 	try{
 	if(e.user.status != 'offline'){

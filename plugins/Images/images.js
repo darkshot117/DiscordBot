@@ -21,7 +21,7 @@ exports.image = {
 		var imageQueryCleaned = (args.replace(/\s/g, '+'));
 		var searchURL = "https://www.googleapis.com/customsearch/v1?key=" + AuthDetails.youtube_api_key
 				+ "&cx=" + AuthDetails.google_custom_search + "&searchType=image"
-				+ "&safe=medium&alt=json&q=" + imageQueryCleaned;
+				+ "&safe=off&alt=json&q=" + imageQueryCleaned;
 
 		request(searchURL, function(err, res, body) {
 			var data, error;
@@ -60,7 +60,7 @@ exports.rimage = {
 		var imageQueryCleaned = (args.replace(/\s/g, '+'));
 		var searchURL = "https://www.googleapis.com/customsearch/v1?key=" + AuthDetails.youtube_api_key
 				+ "&cx=" + AuthDetails.google_custom_search + "&searchType=image"
-				+ "&safe=medium&alt=json&num=10&start="+page +"&q=" + imageQueryCleaned;
+				+ "&safe=off&alt=json&num=10&start="+page +"&q=" + imageQueryCleaned;
 
 		request(searchURL, function(err, res, body) {
 			var data, error;
@@ -95,7 +95,7 @@ exports.ggif = {
 		var imageQueryCleaned = (args.replace(/\s/g, '+'));
 		var searchURL = "https://www.googleapis.com/customsearch/v1?key=" + AuthDetails.youtube_api_key
 				+ "&cx=" + AuthDetails.google_custom_search + "&searchType=image"
-				+ "&alt=json&num=10&start=" + page + "&fileType=gif&q=" + imageQueryCleaned;
+				+ "&safe=off&alt=json&num=10&start=" + page + "&fileType=gif&q=" + imageQueryCleaned;
 
 		request(searchURL, function(err, res, body) {
 			var data, error;
@@ -134,7 +134,7 @@ exports.imgur = {
 		var imageQueryCleaned = "site:imgur.com " + (args.replace(/\s/g, '+'));
 		var searchURL = "https://www.googleapis.com/customsearch/v1?key=" + AuthDetails.youtube_api_key
 				+ "&cx=" + AuthDetails.google_custom_search + "&searchType=image"
-				+ "&safe=medium&alt=json&q=" + imageQueryCleaned;// + "&as_sitesearch=imgur.com";
+				+ "&safe=off&alt=json&q=" + imageQueryCleaned;// + "&as_sitesearch=imgur.com";
 
 		request(searchURL, function(err, res, body) {
 			var data, error;
@@ -172,7 +172,7 @@ exports.google = {
 		var imageQueryCleaned = (args.replace(/\s/g, '+'));
 		var searchURL = "https://www.googleapis.com/customsearch/v1?key=" + AuthDetails.youtube_api_key
 				+ "&cx=" + AuthDetails.google_custom_search
-				+ "&safe=medium&alt=json&q=" + imageQueryCleaned;
+				+ "&safe=off&alt=json&q=" + imageQueryCleaned;
 
 		request(searchURL, function(err, res, body) {
 			var data, error;
