@@ -1,0 +1,30 @@
+{
+  "y": [
+    "youtube",
+    ""
+  ],
+  "disapprove": [
+    "no",
+    ""
+  ],
+  "ar": [
+    "autoresponse",
+    ""
+  ],
+  "t": [
+    "talk",
+    ""
+  ],
+  "rar": [
+    "removeautoresponse",
+    ""
+  ],
+  "ra": [
+    "removealias",
+    ""
+  ],
+  "a": [
+    "alias",
+    ""
+  ]
+}
