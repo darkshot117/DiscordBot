@@ -727,19 +727,22 @@ client.Dispatcher.on(Events.MESSAGE_CREATE, e=>{
 
     if (cmdTxt === "help"){
       //help is special since it iterates over the other commands
-      e.message.channel.sendMessage(e.message.author, "Available Commands:", function(){
-				for(var cmd in commands) {
-					var info = "!" + cmd;
-					var usage = commands[cmd].usage;
-					if(usage){
-						info += " " + usage;
-					}
-					var description = commands[cmd].description;
-					if(description){
-						info += "\n\t" + description;
-					}
-					e.message.channel.sendMessage(e.message.author,info);
-				}
+      e.message.author.openDM().then(function(dm){
+        dm.sendMessage();
+        var info = e.message.author.mention + ": Available Commands: \n";
+  			for(var cmd in commands) {
+  				info += "!" + cmd;
+  				var usage = commands[cmd].usage;
+  				if(usage){
+  					info += " " + usage;
+  				}
+  				/*var description = commands[cmd].description;
+  				if(description){
+  					info += "\n\t" + description;
+  				}*/
+          info += "\n";
+  			}
+        dm.sendMessage(info);
       });
     }
     else if (cmd){
