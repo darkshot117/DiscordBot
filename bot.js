@@ -95,6 +95,7 @@ var meme = {
 
 var aliases;
 var autoresponses;
+var rssupdaters;
 var messagebox;
 
 var commands={
@@ -303,8 +304,67 @@ var commands={
       msg.channel.sendMessage(message);
     }
   },
+  "rssupdater": {
+    usage: "[rss feed name] <channel id>",
+    description: "creates an auto updater for an RSS feed in a given channel",
+    process: function(bot,msg,suffix) {
+      try{
+        var args = suffix.trim().split(" ");
+        var name = args.shift();
+        if(!name){
+          msg.channel.sendMessage(".rssupdater " + this.usage + "\n" + this.description);
+        } else {
+          var channel = args.shift();
+          if (!channel)
+            channel = msg.channel.id;
+          if (!rssupdaters[name]){
+            rssupdaters[name] = {};;
+          }
+          rssupdaters[name][channel] = " ";
+          //now save the new alias file
+          require("fs").writeFile("./rssupdater.json",JSON.stringify(rssupdaters,null,2), null);
+          msg.channel.sendMessage("created rss updater " + name + " in channel: " + channel);
+        }
+      }catch(err){
+        console.log(err);
+      }
+    }
+  },
+  "removerssupdater": {
+    usage: "[rss feed name] <channel id>",
+    description: "removes an auto updater for an RSS feed in a given channel",
+    process: function(bot,msg,suffix) {
+      try{
+        var args = suffix.trim().split(" ");
+        var name = args.shift();
+        if(!name){
+          msg.channel.sendMessage(".removerssupdater " + this.usage + "\n" + this.description);
+        } else {
+          var channel = args.shift();
+            channel = msg.channel.id;
+          if (!rssupdaters[name]){
+            msg.channel.sendMessage("rss updater does not exist");
+            return;
+          }
+          var feed = rssupdaters[name];
+          if(!feed[channel]){
+            msg.channel.sendMessage("rss updater does not exist in this channel");
+            return;
+          }
+          delete rssupdaters[name][channel];
+          if (Object.keys(rssupdaters[name]).length == 0)
+            delete rssupdaters[name];
+          //now save the new alias file
+          require("fs").writeFile("./rssupdater.json",JSON.stringify(rssupdaters,null,2), null);
+          msg.channel.sendMessage("removed rss updater " + name + " from channel: " + channel);
+        }
+      }catch(err){
+        console.log(err);
+      }
+    }
+  },
   "reddit": {
-      usage: "[subreddit]",
+      usage: "[subreddit] [number of posts]",
       description: "Returns the top post on reddit. Can optionally pass a subreddit to get the top post there instead",
       process: function(bot,msg,suffix) {
         var args = suffix.split(" ");
@@ -630,7 +690,15 @@ try{
 try{
   autoresponses = require("./autoresponse.json");
 } catch(e) {
+  //no autoresponses defined
   autoresponses = {};
+}
+
+try{
+  rssupdaters = require("./rssupdater.json");
+} catch(e) {
+  //no autoresponses defined
+  rssupdaters = {};
 }
 
 try{
