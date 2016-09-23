@@ -735,7 +735,7 @@ setInterval(function(){
     if (updated)
       require("fs").writeFile("./rssupdater.json",JSON.stringify(rssupdaters,null,2), null);
   }
-}, 31*1000);
+}, 30*1000);
 
 try{
 	messagebox = require("./messagebox.json");

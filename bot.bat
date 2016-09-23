@@ -1,0 +1,1 @@
+forever -w .\bot.js
