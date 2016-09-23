@@ -321,7 +321,7 @@ var commands={
             rssupdaters[name] = {};;
           }
           rssupdaters[name][channel] = " ";
-          //now save the new alias file
+          //now save the new rss updater file
           require("fs").writeFile("./rssupdater.json",JSON.stringify(rssupdaters,null,2), null);
           msg.channel.sendMessage("created rss updater " + name + " in channel: " + channel);
         }
@@ -341,6 +341,7 @@ var commands={
           msg.channel.sendMessage(".removerssupdater " + this.usage + "\n" + this.description);
         } else {
           var channel = args.shift();
+          if (!channel)
             channel = msg.channel.id;
           if (!rssupdaters[name]){
             msg.channel.sendMessage("rss updater does not exist");
@@ -352,9 +353,10 @@ var commands={
             return;
           }
           delete rssupdaters[name][channel];
-          if (Object.keys(rssupdaters[name]).length == 0)
+          var numKeys = Object.keys(rssupdaters[name]).length;
+          if (numKeys == 0 || numKeys == 1 && rssupdaters[name].latest)
             delete rssupdaters[name];
-          //now save the new alias file
+          //now save the new rss updater file
           require("fs").writeFile("./rssupdater.json",JSON.stringify(rssupdaters,null,2), null);
           msg.channel.sendMessage("removed rss updater " + name + " from channel: " + channel);
         }
@@ -382,7 +384,7 @@ var commands={
         if (count > 5)
           count = 5;
 
-        rssfeed(bot,msg,"https://www.reddit.com"+path,count,false);
+        rssfeed(bot,msg.channel,"https://www.reddit.com"+path,count,false);
       }
   },
   "alias": {
@@ -667,7 +669,7 @@ try{
             if (count > 5)
               count = 5;
 
-            rssfeed(bot,msg,this.url,count,false);
+            rssfeed(bot,msg.channel,this.url,count,false);
           }
           catch(err){
             console.log(err);
@@ -701,6 +703,40 @@ try{
   rssupdaters = {};
 }
 
+setInterval(function(){
+  for(var updater in rssupdaters) {
+    getlatestrss(updater, rssFeeds[updater].url);
+  }
+}, 10*1000);
+
+setInterval(function(){
+  try{
+    var updated = false;
+    for(var rss in rssupdaters) {
+      var latest = rssupdaters[rss].latest;
+      if (!latest)
+        continue;
+
+      Object.keys(rssupdaters[rss]).forEach(function(key){
+        var val = rssupdaters[rss][key];
+        if (val != latest){
+          var channel = client.Channels.get(key);
+          if (channel){
+            channel.sendMessage(latest);
+            rssupdaters[rss][key] = latest;
+            updated = true;
+          }
+        }
+      });
+    }
+  } catch (err){
+    console.log(err);
+  } finally {
+    if (updated)
+      require("fs").writeFile("./rssupdater.json",JSON.stringify(rssupdaters,null,2), null);
+  }
+}, 10*1000);
+
 try{
 	messagebox = require("./messagebox.json");
 } catch(e) {
@@ -711,13 +747,13 @@ function updateMessagebox(){
 	require("fs").writeFile("./messagebox.json",JSON.stringify(messagebox,null,2), null);
 }
 
-function rssfeed(bot,msg,url,count,full){
+function rssfeed(bot,channel,url,count,full){
     var FeedParser = require('feedparser');
     var feedparser = new FeedParser();
     var request = require('request');
     request(url).pipe(feedparser);
     feedparser.on('error', function(error){
-        msg.channel.sendMessage("failed reading feed: " + error);
+        channel.sendMessage("failed reading feed: " + error);
     });
     var shown = 0;
     feedparser.on('readable',function() {
@@ -727,16 +763,45 @@ function rssfeed(bot,msg,url,count,full){
             return;
         }
         var item = stream.read();
-        msg.channel.sendMessage(item.title + " - " + item.link, function() {
+        channel.sendMessage(item.title + " - " + item.link, function() {
             if(full === true){
                 var text = htmlToText.fromString(item.description,{
                     wordwrap:false,
                     ignoreHref:true
                 });
-                msg.channel.sendMessage(text);
+                channel.sendMessage(text);
             }
         });
         stream.alreadyRead = true;
+    });
+}
+
+function getlatestrss(updaterentry, url){
+    var FeedParser = require('feedparser');
+    var feedparser = new FeedParser();
+    var request = require('request');
+    request(url).pipe(feedparser);
+    feedparser.on('error', function(error){
+      if (rssupdaters[updaterentry].latest != "failed reading feed: " + error){
+        rssupdaters[updaterentry].latest = "failed reading feed: " + error;
+        require("fs").writeFile("./rssupdater.json",JSON.stringify(rssupdaters,null,2), null);
+      }
+      return;
+    });
+    var shown = 0;
+    var count = 1;
+    feedparser.on('readable',function() {
+        var stream = this;
+        shown += 1
+        if(shown > count)
+            return;
+        var item = stream.read();
+        stream.alreadyRead = true;
+        if (rssupdaters[updaterentry].latest != item.link){
+          rssupdaters[updaterentry].latest = item.link;
+          require("fs").writeFile("./rssupdater.json",JSON.stringify(rssupdaters,null,2), null);
+        }
+        return;
     });
 }
 
