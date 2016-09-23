@@ -707,7 +707,7 @@ setInterval(function(){
   for(var updater in rssupdaters) {
     getlatestrss(updater, rssFeeds[updater].url);
   }
-}, 10*1000);
+}, 30*1000);
 
 setInterval(function(){
   try{
@@ -735,7 +735,7 @@ setInterval(function(){
     if (updated)
       require("fs").writeFile("./rssupdater.json",JSON.stringify(rssupdaters,null,2), null);
   }
-}, 10*1000);
+}, 31*1000);
 
 try{
 	messagebox = require("./messagebox.json");

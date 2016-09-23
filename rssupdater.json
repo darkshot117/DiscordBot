@@ -4,8 +4,8 @@
     "latest": "https://robertsspaceindustries.com/comm-link/transmission/15532-Around-The-Verse",
     "227497027288694785": "https://robertsspaceindustries.com/comm-link/transmission/15532-Around-The-Verse"
   },
-  "gnews": {
-    "228580976073244672": "http://news.google.com/news/url?sa=t&fd=R&ct2=us&usg=AFQjCNF7VpdO0y-3LyWkLDQOXbql2oVi1Q&clid=c3a7d30bb8a4878e06b80cf16b898331&cid=52779213218542&ei=s3vkV8jfAoWkhAHt2ZnoCg&url=https://www.washingtonpost.com/news/post-nation/wp/2016/09/22/tulsa-officer-who-fatally-shot-terrence-crutcher-charged-with-first-degree-manslaughter/",
-    "latest": "http://news.google.com/news/url?sa=t&fd=R&ct2=us&usg=AFQjCNF7VpdO0y-3LyWkLDQOXbql2oVi1Q&clid=c3a7d30bb8a4878e06b80cf16b898331&cid=52779213218542&ei=wXvkV-CYF8GnhQGW06aADQ&url=https://www.washingtonpost.com/news/post-nation/wp/2016/09/22/tulsa-officer-who-fatally-shot-terrence-crutcher-charged-with-first-degree-manslaughter/"
+  "slashdot": {
+    "228580976073244672": "https://yro.slashdot.org/story/16/09/23/0051239/senate-panel-authorizes-money-for-mission-to-mars?utm_source=rss1.0mainlinkanon&utm_medium=feed",
+    "latest": "https://yro.slashdot.org/story/16/09/23/0051239/senate-panel-authorizes-money-for-mission-to-mars?utm_source=rss1.0mainlinkanon&utm_medium=feed"
   }
 }
