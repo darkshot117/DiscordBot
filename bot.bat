@@ -1,1 +1,1 @@
-forever -w .\bot.js
+forever .\bot.js

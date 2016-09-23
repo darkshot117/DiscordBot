@@ -797,8 +797,8 @@ function getlatestrss(updaterentry, url){
             return;
         var item = stream.read();
         stream.alreadyRead = true;
-        if (rssupdaters[updaterentry].latest != item.link){
-          rssupdaters[updaterentry].latest = item.link;
+        if (rssupdaters[updaterentry].latest != item.title + " - " + item.link){
+          rssupdaters[updaterentry].latest = item.title + " - " + item.link;
           require("fs").writeFile("./rssupdater.json",JSON.stringify(rssupdaters,null,2), null);
         }
         return;
