@@ -782,10 +782,10 @@ function getlatestrss(updaterentry, url){
     var request = require('request');
     request(url).pipe(feedparser);
     feedparser.on('error', function(error){
-      if (rssupdaters[updaterentry].latest != "failed reading feed: " + error){
+      /*if (rssupdaters[updaterentry].latest != "failed reading feed: " + error){
         rssupdaters[updaterentry].latest = "failed reading feed: " + error;
         require("fs").writeFile("./rssupdater.json",JSON.stringify(rssupdaters,null,2), null);
-      }
+      }*/
       return;
     });
     var shown = 0;
